@@ -91,8 +91,8 @@ jules-backend/
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/Jules.git
-cd Jules/jules-backend
+git clone <repository-url>
+cd jules-backend
 
 # Install dependencies
 pip install -e ".[dev]"
@@ -239,9 +239,7 @@ Proprietary - All Rights Reserved
 
 ## Support
 
-For issues, questions, or support:
-- GitHub Issues: [github.com/yourusername/Jules/issues](https://github.com/yourusername/Jules/issues)
-- Email: support@jules-ai.com
+For issues, questions, or support, please use GitHub Issues in this repository.
 
 ## Acknowledgments
 
