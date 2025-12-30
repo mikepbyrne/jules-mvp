@@ -85,8 +85,12 @@ TESTING/
 # Legacy jules-mvp directory (keep private)
 jules-mvp/
 
+# Backend code (keep private for now)
+jules-backend/
+
 # ============================================================================
 # Private compass artifacts and internal docs
 # ============================================================================
 compass_artifact_*.md
 TESTING_SYSTEM_COMPLETE.md
+Jules.code-workspace
