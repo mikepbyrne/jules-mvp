@@ -1,0 +1,162 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: jules-postgres
+    environment:
+      POSTGRES_DB: jules_dev
+      POSTGRES_USER: jules
+      POSTGRES_PASSWORD: jules_dev_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jules -d jules_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jules-network
+
+  # PostgreSQL Test Database
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: jules-postgres-test
+    environment:
+      POSTGRES_DB: jules_test
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    networks:
+      - jules-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: jules-redis
+    command: redis-server --appendonly yes --requirepass jules_redis_password
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jules-network
+
+  # Jules Backend API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: jules-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Application
+      ENVIRONMENT: development
+      DEBUG: "true"
+      LOG_LEVEL: INFO
+      SECRET_KEY: dev-secret-key-replace-in-production-32chars
+
+      # Database
+      DATABASE_URL: postgresql+asyncpg://jules:jules_dev_password@postgres:5432/jules_dev
+
+      # Redis
+      REDIS_URL: redis://:jules_redis_password@redis:6379/0
+
+      # SMS (Bandwidth) - Replace with your credentials
+      BANDWIDTH_ACCOUNT_ID: ${BANDWIDTH_ACCOUNT_ID:-your-account-id}
+      BANDWIDTH_USERNAME: ${BANDWIDTH_USERNAME:-your-username}
+      BANDWIDTH_PASSWORD: ${BANDWIDTH_PASSWORD:-your-password}
+      BANDWIDTH_APPLICATION_ID: ${BANDWIDTH_APPLICATION_ID:-your-app-id}
+      BANDWIDTH_PHONE_NUMBER: ${BANDWIDTH_PHONE_NUMBER:-+15551234567}
+
+      # LLM Providers
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-your-anthropic-key}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-your-openai-key}
+      DEFAULT_LLM_PROVIDER: anthropic
+      DEFAULT_MODEL: claude-3-5-haiku-20241022
+
+      # Age Verification (Veriff)
+      VERIFF_API_KEY: ${VERIFF_API_KEY:-your-veriff-key}
+      VERIFF_API_SECRET: ${VERIFF_API_SECRET:-your-veriff-secret}
+
+      # Payment (Stripe)
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_your-key}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-pk_test_your-key}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_your-secret}
+      STRIPE_PRICE_ID_MONTHLY: ${STRIPE_PRICE_ID_MONTHLY:-price_monthly}
+      STRIPE_PRICE_ID_ANNUAL: ${STRIPE_PRICE_ID_ANNUAL:-price_annual}
+
+      # Monitoring
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+
+      # Security
+      ENCRYPTION_KEY: dev-encryption-key-32-characters
+      JWT_SECRET_KEY: dev-jwt-secret-key-32-characters!
+
+      # Compliance
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+      - ./alembic:/app/alembic
+      - ./alembic.ini:/app/alembic.ini
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - jules-network
+
+  # Adminer - Database Management UI
+  adminer:
+    image: adminer:latest
+    container_name: jules-adminer
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    networks:
+      - jules-network
+
+  # Redis Commander - Redis Management UI
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: jules-redis-commander
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0:jules_redis_password
+    ports:
+      - "8081:8081"
+    networks:
+      - jules-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  jules-network:
+    driver: bridge

@@ -1,0 +1,101 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: jules_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.7.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Run linters
+        run: |
+          poetry run ruff check src tests
+          poetry run black --check src tests
+          poetry run mypy src
+
+      - name: Run tests with coverage
+        env:
+          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/jules_test
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-secret-key-32-characters!!
+          ENCRYPTION_KEY: test-encryption-key-32-chars!
+          JWT_SECRET_KEY: test-jwt-secret-key-32-chars!
+          BANDWIDTH_ACCOUNT_ID: test-account
+          BANDWIDTH_USERNAME: test-user
+          BANDWIDTH_PASSWORD: test-pass
+          BANDWIDTH_APPLICATION_ID: test-app
+          BANDWIDTH_PHONE_NUMBER: +15551234567
+          ANTHROPIC_API_KEY: test-anthropic-key
+          OPENAI_API_KEY: test-openai-key
+          VERIFF_API_KEY: test-veriff-key
+          VERIFF_API_SECRET: test-veriff-secret
+          STRIPE_SECRET_KEY: sk_test_123
+          STRIPE_PUBLISHABLE_KEY: pk_test_123
+          STRIPE_WEBHOOK_SECRET: whsec_test_123
+          STRIPE_PRICE_ID_MONTHLY: price_test_monthly
+          STRIPE_PRICE_ID_ANNUAL: price_test_annual
+        run: |
+          poetry run pytest -v --cov=src --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false

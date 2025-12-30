@@ -75,5 +75,18 @@ jules-mvp/sms_delivery_fix.py
 jules-mvp/data/
 data/
 
-# Backend (if not needed publicly)
-backend/
+# ============================================================================
+# PRIVATE DIRECTORIES - DO NOT COMMIT TO GITHUB
+# ============================================================================
+
+# TESTING directory contains internal testing tools and MVP code
+TESTING/
+
+# Legacy jules-mvp directory (keep private)
+jules-mvp/
+
+# ============================================================================
+# Private compass artifacts and internal docs
+# ============================================================================
+compass_artifact_*.md
+TESTING_SYSTEM_COMPLETE.md
