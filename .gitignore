@@ -1,0 +1,79 @@
+# Environment and secrets
+.env
+*.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs and temporary files
+logs/
+*.log
+.ngrok_info
+
+# Internal documentation (not for public)
+CLAUDE.md
+ARCHITECTURE.md
+CHANGELOG.md
+CRITICAL_FINDINGS.md
+IMPROVEMENTS_IMPLEMENTED.md
+MICRO-ROADMAP.md
+PROJECT_SETUP.md
+SECURITY_AUDIT_SUMMARY.md
+SINGLE_USER_MVP.md
+STATUS.md
+TOOLING_RESEARCH.md
+NEXT_STEPS.md
+
+# Jules-specific internal docs
+jules-mvp/AI_SETUP.md
+jules-mvp/COST_MONITORING.md
+jules-mvp/GITHUB_SETUP.md
+jules-mvp/NGROK_SETUP.md
+jules-mvp/ONBOARDING_FLOW.md
+jules-mvp/PUSH_TO_GITHUB.md
+jules-mvp/QUICKSTART.md
+jules-mvp/QUICK_FIX_GUIDE.md
+jules-mvp/QUICK_START.txt
+jules-mvp/README_SETUP.md
+jules-mvp/READY_TO_TEST.md
+jules-mvp/READY_TO_TEST_JULES.md
+jules-mvp/START_HERE.md
+jules-mvp/SUCCESS.md
+jules-mvp/TESTING_CHECKLIST.md
+jules-mvp/TEST_RESULTS.md
+jules-mvp/TWILIO_TOLLFREE_VERIFICATION_RESPONSES.md
+jules-mvp/TWILIO_WEBHOOK_CONFIG.md
+jules-mvp/WEBHOOK_SETUP_GUIDE.md
+
+# Debug and test scripts
+jules-mvp/check_account_details.py
+jules-mvp/check_number_compliance_link.py
+jules-mvp/check_tollfree_compliance.py
+jules-mvp/debug_sms_delivery.py
+jules-mvp/sms_delivery_fix.py
+
+# Data files
+jules-mvp/data/
+data/
+
+# Backend (if not needed publicly)
+backend/
